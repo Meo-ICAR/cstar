@@ -78,8 +78,8 @@ jobs:
     # 9. Esecuzione Test (Pest)
     # Usa SQLite in memoria per velocità.
     # Se usi feature specifiche di MySQL, dovrai configurare un servizio MySQL.
-    - name: Execute Tests (Pest)
+    - name: Execute tests
+      run: php artisan test
       env:
         DB_CONNECTION: sqlite
         DB_DATABASE: ':memory:'
-      run: ./vendor/bin/pest
