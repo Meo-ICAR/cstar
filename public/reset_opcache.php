@@ -1,4 +1,5 @@
 <?php
+
 if (function_exists('opcache_reset')) {
     echo opcache_reset() ? 'OpCache reset successful' : 'OpCache reset failed';
 } else {
