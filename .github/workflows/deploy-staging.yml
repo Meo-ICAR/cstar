@@ -50,23 +50,19 @@ jobs:
             # 5. Riavvio processi
             php artisan horizon:terminate
 
-            # 6. Shield & Admin
+            # 6. Shield & Admin & User
+            # Genera i permessi basati sulle Policy
             php artisan shield:generate --all --no-interaction
-            php artisan tinker --execute="
-                \$user = \App\Models\User::updateOrCreate(
-                    ['email' => '${{ secrets.SUPER_ADMIN_EMAIL }}'],
-                    [
-                        'name' => 'Super Admin',
-                        'password' => \Illuminate\Support\Facades\Hash::make('${{ secrets.SUPER_ADMIN_PASSWORD }}'),
-                        'email_verified_at' => now(),
-                    ]
-                );
-                \$user->assignRole('super_admin');
-            "
+
+            # Esegue il seeder specifico che crea Ruolo e Utente (Legge le secrets dal .env o dall'environment)
+            # IMPORTANTE: Passiamo le variabili d'ambiente direttamente al comando
+            SUPER_ADMIN_EMAIL="${{ secrets.SUPER_ADMIN_EMAIL }}" \
+            SUPER_ADMIN_PASSWORD="${{ secrets.SUPER_ADMIN_PASSWORD }}" \
+            php artisan db:seed --class=DeploySeeder --force
 
             # --- FIX PERMANENTE PERMESSI (CORRETTO) ---
 
-            # A. Il proprietario deve essere ubuntu (tu), il gruppo www-data (apache)
+            A. Il proprietario deve essere ubuntu (tu), il gruppo www-data (apache)
             sudo chown -R ubuntu:www-data .
 
             # B. Cartelle 775, File 664
