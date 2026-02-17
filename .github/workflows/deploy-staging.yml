@@ -25,29 +25,31 @@ jobs:
           script: |
             cd /var/www/html/cstar
 
-            # Reset dei permessi per permettere a Git di lavorare
+            # 1. Reset iniziale permessi per permettere a Git di lavorare
+            # (Ci assicuriamo che ubuntu sia il proprietario prima di iniziare)
             sudo chown -R ubuntu:www-data .
 
-            # Pull del codice
+            # 2. Pull del codice
             git fetch origin main
             git reset --hard origin/main
 
-            # Installazione dipendenze produzione
+            # 3. Installazione dipendenze
             composer install --no-dev --optimize-autoloader --no-interaction
 
-            # Migrazioni e cache
+            # 4. Migrazioni e cache
             php artisan migrate --force
             php artisan filament:upgrade
             php artisan optimize:clear
             php artisan optimize
+            php artisan icon:cache
+            php artisan view:cache
+            php artisan route:cache
 
-            # Riavvio processi in background (Horizon/Pulse)
+            # 5. Riavvio processi
             php artisan horizon:terminate
 
-            # Assicuriamoci che i ruoli di Shield esistano
+            # 6. Shield & Admin
             php artisan shield:generate --all --no-interaction
-
-            # Creazione o aggiornamento dell'utente Super Admin
             php artisan tinker --execute="
                 \$user = \App\Models\User::updateOrCreate(
                     ['email' => '${{ secrets.SUPER_ADMIN_EMAIL }}'],
@@ -59,10 +61,21 @@ jobs:
                 );
                 \$user->assignRole('super_admin');
             "
-            # --- FIX PERMANENTE PERMESSI ---
-            sudo chown -R www-data:www-data .
+
+            # --- FIX PERMANENTE PERMESSI (CORRETTO) ---
+
+            # A. Il proprietario deve essere ubuntu (tu), il gruppo www-data (apache)
+            sudo chown -R ubuntu:www-data .
+
+            # B. Cartelle 775 (Tu e Apache scrivete), File 664 (Tu e Apache scrivete)
             sudo find . -type d -exec chmod 775 {} \;
             sudo find . -type f -exec chmod 664 {} \;
-            sudo chmod -R g+s storage bootstrap/cache
+
+            # C. Cartelle speciali: Storage e Cache devono essere SEMPRE scrivibili
+            sudo chmod -R 777 storage bootstrap/cache
+
+            # D. ACL (Access Control Lists) - La magia che impedisce problemi futuri
+            # Assicura che i file creati da Apache (log, cache) siano modificabili da te e viceversa
             sudo setfacl -R -m u:www-data:rwx -m u:ubuntu:rwx storage bootstrap/cache
             sudo setfacl -dR -m u:www-data:rwx -m u:ubuntu:rwx storage bootstrap/cache
+            sudo > storage/logs/laravel.log
