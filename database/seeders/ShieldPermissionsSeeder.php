@@ -31,7 +31,7 @@ class ShieldPermissionsSeeder extends Seeder
 
         // Crea tutti i permessi
         $allPermissions = array_merge($userPermissions, $panelPermissions);
-        
+
         foreach ($allPermissions as $permission) {
             Permission::firstOrCreate(['name' => $permission]);
         }
@@ -43,6 +43,6 @@ class ShieldPermissionsSeeder extends Seeder
         }
 
         $this->command->info('✅ Shield permissions generated successfully!');
-        $this->command->info('📊 Total permissions: ' . Permission::count());
+        $this->command->info('📊 Total permissions: '.Permission::count());
     }
 }
