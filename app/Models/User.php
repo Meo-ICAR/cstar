@@ -19,6 +19,7 @@ class User extends Authenticatable
     // <--- USA IL TRAIT
     use HasRoles;
     use LogsActivity;
+
     // Aggiungi questi Trait
     use TwoFactorAuthenticatable;
 

@@ -27,6 +27,7 @@
         "spatie/laravel-medialibrary": "^11.20"
     },
     "require-dev": {
+        "brainmaestro/composer-git-hooks": "^3.0",
         "fakerphp/faker": "^1.23",
         "larastan/larastan": "^3.9",
         "laravel/boost": "^2.1",
@@ -93,6 +94,11 @@
     "extra": {
         "laravel": {
             "dont-discover": []
+        },
+        "hooks": {
+            "pre-commit": [
+                "./vendor/bin/pint"
+            ]
         }
     },
     "config": {
