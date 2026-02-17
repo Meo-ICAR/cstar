@@ -7,20 +7,28 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Jeffgreco13\FilamentBreezy\Traits\TwoFactorAuthenticatable;  // <--- Per Breezy
-use OwenIt\Auditing\Auditable as AuditableTrait;  // <--- Fondamentale
-use OwenIt\Auditing\Contracts\Auditable;  // <--- AGGIUNGI QUESTO
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;  // <--- Per Filament Shield
 
-class User extends Authenticatable implements Auditable
+class User extends Authenticatable
 {
-    use AuditableTrait;
-
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
     // <--- USA IL TRAIT
-    use HasRoles;  // Aggiungi questi Trait
+    use HasRoles;
+    use LogsActivity;
+    // Aggiungi questi Trait
     use TwoFactorAuthenticatable;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     /**
      * The attributes that are mass assignable.
