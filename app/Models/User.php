@@ -7,15 +7,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Jeffgreco13\FilamentBreezy\Traits\TwoFactorAuthenticatable;  // <--- Per Breezy
-use OwenIt\Auditing\Contracts\Auditable;  // <--- Fondamentale
-use OwenIt\Auditing\Auditable as AuditableTrait;  // <--- AGGIUNGI QUESTO
+use OwenIt\Auditing\Auditable as AuditableTrait;  // <--- Fondamentale
+use OwenIt\Auditing\Contracts\Auditable;  // <--- AGGIUNGI QUESTO
 use Spatie\Permission\Traits\HasRoles;  // <--- Per Filament Shield
 
 class User extends Authenticatable implements Auditable
 {
     use AuditableTrait;
+
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+
     // <--- USA IL TRAIT
     use HasRoles;  // Aggiungi questi Trait
     use TwoFactorAuthenticatable;

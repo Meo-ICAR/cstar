@@ -24,12 +24,30 @@ jobs:
           port: 22
           script: |
             cd /var/www/html/cstar
-            php artisan down
-            git pull origin main
-            composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+
+            # Reset dei permessi per permettere a Git di lavorare
+            sudo chown -R ubuntu:www-data .
+
+            # Pull del codice
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Installazione dipendenze produzione
+            composer install --no-dev --optimize-autoloader --no-interaction
+
+            # Migrazioni e cache
             php artisan migrate --force
+            php artisan filament:upgrade
+            php artisan optimize:clear
             php artisan optimize
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
-            php artisan up
+
+            # Riavvio processi in background (Horizon/Pulse)
+            php artisan horizon:terminate
+
+            # --- FIX PERMANENTE PERMESSI ---
+            sudo chown -R www-data:www-data .
+            sudo find . -type d -exec chmod 775 {} \;
+            sudo find . -type f -exec chmod 664 {} \;
+            sudo chmod -R g+s storage bootstrap/cache
+            sudo setfacl -R -m u:www-data:rwx -m u:ubuntu:rwx storage bootstrap/cache
+            sudo setfacl -dR -m u:www-data:rwx -m u:ubuntu:rwx storage bootstrap/cache
