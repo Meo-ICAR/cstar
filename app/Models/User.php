@@ -6,11 +6,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Jeffgreco13\FilamentBreezy\Traits\TwoFactorAuthenticatable;  // <--- Per Breezy
+use OwenIt\Auditing\Contracts\Auditable;  // <--- AGGIUNGI QUESTO
+use OwenIt\Auditing\Auditable as AuditableTrait;  // <--- Fondamentale
+use Spatie\Permission\Traits\HasRoles;  // <--- Per Filament Shield
 
-class User extends Authenticatable
+class User extends Authenticatable implements Auditable
 {
+    // Aggiungi questi Trait
+    use TwoFactorAuthenticatable;
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+    use AuditableTrait;  // <--- USA IL TRAIT
+    use HasRoles;
 
     /**
      * The attributes that are mass assignable.
