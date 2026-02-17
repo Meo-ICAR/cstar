@@ -1,0 +1,85 @@
+name: Laravel 12 Security & Quality CI
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  laravel-tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: true
+      matrix:
+        php: [8.4] # Laravel 12 richiede PHP recente. Testiamo su 8.3 e 8.4
+
+    name: Security & Test (PHP ${{ matrix.php }})
+
+    steps:
+    # 1. Scarica il codice dal repository
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # 2. Prepara l'ambiente PHP
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php }}
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, fileinfo
+        coverage: none
+
+    # 3. Gestione Cache (Velocizza i tempi di esecuzione)
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v4
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ matrix.php }}-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-${{ matrix.php }}-
+
+    # 4. Installazione Dipendenze
+    - name: Install Dependencies
+      run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+    # 5. Configurazione Ambiente di Test
+    - name: Prepare Laravel Application
+      run: |
+        cp .env.example .env
+        php artisan key:generate
+        chmod -R 777 storage bootstrap/cache
+
+    # ---------------------------------------------------------
+    # FASE DI SICUREZZA (Bloccante per CSTAR)
+    # ---------------------------------------------------------
+
+    # 6. Audit delle Dipendenze (Vulnerabilità note)
+    # Se questo fallisce, il deploy NON deve avvenire.
+    - name: Security Audit (Composer)
+      run: composer audit
+
+    # 7. Analisi Statica (Qualità e Sicurezza del codice)
+    # Verifica errori di tipo e potenziali bug logici
+    - name: Static Analysis (Larastan/PHPStan)
+      run: ./vendor/bin/phpstan analyse --memory-limit=2G
+      continue-on-error: false # Imposta a true se vuoi solo warning all'inizio
+
+    # 8. Linting (Stile del codice PSR-12)
+    # Opzionale ma consigliato per mantenere il codice pulito
+    - name: Code Style (Pint)
+      run: ./vendor/bin/pint --test
+
+    # ---------------------------------------------------------
+    # FASE DI TESTING
+    # ---------------------------------------------------------
+
+    # 9. Esecuzione Test (Pest)
+    # Usa SQLite in memoria per velocità.
+    # Se usi feature specifiche di MySQL, dovrai configurare un servizio MySQL.
+    - name: Execute Tests (Pest)
+      env:
+        DB_CONNECTION: sqlite
+        DB_DATABASE: :memory:
+      run: ./vendor/bin/pest
