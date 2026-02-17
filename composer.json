@@ -24,7 +24,7 @@
         "spatie/laravel-backup": "^9.4",
         "spatie/laravel-cookie-consent": "^3.3",
         "spatie/laravel-medialibrary": "^11.20",
-        "filament/spatie-laravel-media-library-plugin": "^5.2",
+        "filament/spatie-laravel-media-library-plugin": "^5.2"
     },
     "require-dev": {
         "brainmaestro/composer-git-hooks": "^3.0",
