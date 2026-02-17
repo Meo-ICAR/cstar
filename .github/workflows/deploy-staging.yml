@@ -23,17 +23,19 @@ jobs:
           key: ${{ secrets.STAGING_SSH_KEY }}
           port: 22
           script: |
+            # 0. IMPORTANTE: Aggiungiamo i percorsi di sistema per trovare 'composer' e 'php'
+            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+
             cd /var/www/html/cstar
 
             # 1. Reset iniziale permessi per permettere a Git di lavorare
-            # (Ci assicuriamo che ubuntu sia il proprietario prima di iniziare)
             sudo chown -R ubuntu:www-data .
 
             # 2. Pull del codice
             git fetch origin main
             git reset --hard origin/main
 
-            # 3. Installazione dipendenze
+            # 3. Installazione dipendenze (Ora composer verrà trovato!)
             composer install --no-dev --optimize-autoloader --no-interaction
 
             # 4. Migrazioni e cache
@@ -67,15 +69,18 @@ jobs:
             # A. Il proprietario deve essere ubuntu (tu), il gruppo www-data (apache)
             sudo chown -R ubuntu:www-data .
 
-            # B. Cartelle 775 (Tu e Apache scrivete), File 664 (Tu e Apache scrivete)
+            # B. Cartelle 775, File 664
             sudo find . -type d -exec chmod 775 {} \;
             sudo find . -type f -exec chmod 664 {} \;
 
             # C. Cartelle speciali: Storage e Cache devono essere SEMPRE scrivibili
             sudo chmod -R 777 storage bootstrap/cache
 
-            # D. ACL (Access Control Lists) - La magia che impedisce problemi futuri
-            # Assicura che i file creati da Apache (log, cache) siano modificabili da te e viceversa
+            # D. Creazione sicura del file di log (Correzione errore sudo)
+            sudo touch storage/logs/laravel.log
+            sudo chown www-data:www-data storage/logs/laravel.log
+            sudo chmod 664 storage/logs/laravel.log
+
+            # E. ACL finali
             sudo setfacl -R -m u:www-data:rwx -m u:ubuntu:rwx storage bootstrap/cache
             sudo setfacl -dR -m u:www-data:rwx -m u:ubuntu:rwx storage bootstrap/cache
-            sudo > storage/logs/laravel.log
