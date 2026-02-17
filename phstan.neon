@@ -1,0 +1,15 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app/
+        # - tests/ # Decommenta se vuoi analizzare anche i test (spesso genera falsi positivi all'inizio)
+
+    # Livello di analisi (0 = base, 9 = paranoico).
+    # Per iniziare va bene 5. Per CSTAR punta a salire.
+    level: 5
+
+    # Ignora errori specifici se necessario (utile per legacy code)
+    # ignoreErrors:
+    #    - '#Unsafe usage of new static#'
