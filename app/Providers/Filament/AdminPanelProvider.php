@@ -2,7 +2,7 @@
 
 namespace App\Providers\Filament;
 
-use Bezhansalleh\FilamentShield\FilamentShieldPlugin;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use DutchCodingCompany\FilamentSocialite\FilamentSocialitePlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -59,7 +59,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->plugins([
                 // 1. GESTIONE PERMESSI E RUOLI
-                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
+                FilamentShieldPlugin::make(),
                 // 2. PROFILO UTENTE E 2FA (Sostituisce Fortify)
                 BreezyCore::make()
                     ->myProfile(
