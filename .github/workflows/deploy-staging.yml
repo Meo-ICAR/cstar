@@ -1,0 +1,48 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_run:
+    workflows: ["Laravel Security & Analysis"] # Assicurati che il nome corrisponda al primo file yml
+    types:
+      - completed
+
+jobs:
+  deploy:
+    # Esegue il deploy solo se il push è su main E se il workflow di test precedente ha avuto successo
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Staging Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          port: 22
+          script: |
+            # Entra nella cartella del progetto
+            cd /var/www/cstar
+
+            # Mette l'app in manutenzione (opzionale, ma consigliato)
+            php artisan down
+
+            # Scarica le modifiche da GitHub
+            git pull origin main
+
+            # Installa le dipendenze (senza dev)
+            composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+
+            # Esegue le migrazioni del database
+            php artisan migrate --force
+
+            # Pulisce e ricrea la cache
+            php artisan optimize
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+
+            # Rimette l'app online
+            php artisan up
