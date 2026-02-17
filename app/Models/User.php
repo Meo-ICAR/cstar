@@ -6,33 +6,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Gate;
 use Jeffgreco13\FilamentBreezy\Traits\TwoFactorAuthenticatable;  // <--- Per Breezy
-use OwenIt\Auditing\Auditable as AuditableTrait;  // <--- Fondamentale
-use OwenIt\Auditing\Contracts\Auditable;  // <--- AGGIUNGI QUESTO
+use OwenIt\Auditing\Contracts\Auditable;  // <--- Fondamentale
+use OwenIt\Auditing\Auditable as AuditableTrait;  // <--- AGGIUNGI QUESTO
 use Spatie\Permission\Traits\HasRoles;  // <--- Per Filament Shield
 
 class User extends Authenticatable implements Auditable
 {
     use AuditableTrait;
-
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
-
     // <--- USA IL TRAIT
     use HasRoles;  // Aggiungi questi Trait
     use TwoFactorAuthenticatable;
-
-    public function boot(): void
-    {
-        Gate::define('viewPulse', function (User $user) {
-            // Opzione A: Autorizza per email specifica
-            // return $user->email === 'tua-email@esempio.com';
-
-            // Opzione B: Autorizza tramite Filament Shield (se hai creato il ruolo super_admin)
-            return $user->hasRole('super_admin');
-        });
-    }
 
     /**
      * The attributes that are mass assignable.
