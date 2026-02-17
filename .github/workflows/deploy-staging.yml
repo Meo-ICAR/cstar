@@ -55,6 +55,7 @@ jobs:
             SUPER_ADMIN_EMAIL="${{ secrets.SUPER_ADMIN_EMAIL }}" \
             SUPER_ADMIN_PASSWORD="${{ secrets.SUPER_ADMIN_PASSWORD }}" \
             php artisan db:seed --class=DeploySeeder --force
+            php artisan db:seed --class=ShieldPermissionsSeeder
 
             # --- FIX PERMANENTE PERMESSI ---
 
