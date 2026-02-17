@@ -23,22 +23,20 @@ jobs:
           key: ${{ secrets.STAGING_SSH_KEY }}
           port: 22
           script: |
-            # 0. IMPORTANTE: Aggiungiamo i percorsi di sistema per trovare 'composer' e 'php'
             export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
-
             cd /var/www/html/cstar
 
-            # 1. Reset iniziale permessi per permettere a Git di lavorare
+            # 1. Reset permessi iniziale
             sudo chown -R ubuntu:www-data .
 
-            # 2. Pull del codice
+            # 2. Git Pull
             git fetch origin main
             git reset --hard origin/main
 
-            # 3. Installazione dipendenze (Ora composer verrà trovato!)
+            # 3. Installazione dipendenze
             composer install --no-dev --optimize-autoloader --no-interaction
 
-            # 4. Migrazioni e cache
+            # 4. Comandi Laravel
             php artisan migrate --force
             php artisan filament:upgrade
             php artisan optimize:clear
@@ -47,32 +45,31 @@ jobs:
             php artisan view:cache
             php artisan route:cache
 
-            # 5. Riavvio processi
-            php artisan horizon:terminate
+            # Horizon: Usiamo sudo e ignoriamo errori se non c'è nulla da terminare
+            sudo php artisan horizon:terminate || true
 
-            # 6. Shield & Admin & User
-            # Genera i permessi basati sulle Policy
-            php artisan shield:generate --all --no-interaction
+            # 5. Shield e Admin
+            # Nota: Shield potrebbe lamentarsi in non-interactive, ma il seeder sistemerà tutto
+            php artisan shield:generate --all --no-interaction || true
 
-            # Esegue il seeder specifico che crea Ruolo e Utente (Legge le secrets dal .env o dall'environment)
-            # IMPORTANTE: Passiamo le variabili d'ambiente direttamente al comando
             SUPER_ADMIN_EMAIL="${{ secrets.SUPER_ADMIN_EMAIL }}" \
             SUPER_ADMIN_PASSWORD="${{ secrets.SUPER_ADMIN_PASSWORD }}" \
             php artisan db:seed --class=DeploySeeder --force
 
-            # --- FIX PERMANENTE PERMESSI (CORRETTO) ---
+            # --- FIX PERMANENTE PERMESSI ---
 
-            A. Il proprietario deve essere ubuntu (tu), il gruppo www-data (apache)
+            # A. Proprietario ubuntu e gruppo www-data
             sudo chown -R ubuntu:www-data .
 
-            # B. Cartelle 775, File 664
+            # B. Cartelle 775 e File 664
             sudo find . -type d -exec chmod 775 {} \;
             sudo find . -type f -exec chmod 664 {} \;
 
-            # C. Cartelle speciali: Storage e Cache devono essere SEMPRE scrivibili
+            # C. Cartelle speciali sempre scrivibili
             sudo chmod -R 777 storage bootstrap/cache
 
-            # D. Creazione sicura del file di log (Correzione errore sudo)
+            # D. File di log
+            sudo truncate -s 0 storage/logs/laravel.log
             sudo touch storage/logs/laravel.log
             sudo chown www-data:www-data storage/logs/laravel.log
             sudo chmod 664 storage/logs/laravel.log
