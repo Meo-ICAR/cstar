@@ -1,0 +1,27 @@
+name: Cleanup Old Actions
+
+on:
+  workflow_dispatch: # Permette l'avvio manuale per test
+  schedule:
+    - cron: '0 0 * * *' # Ogni notte a mezzanotte
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write # Necessario per poter cancellare i log
+    steps:
+      - name: Delete old workflow runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Otteniamo l'ID del workflow principale (cambia "Deploy Website" se necessario)
+          WORKFLOW_ID=$(gh run list --workflow "Laravel 12 Security & Quality CI" --json workflowDatabaseId --limit 1 | jq '.[0].workflowDatabaseId')
+
+          # Troviamo tutte le run tranne le ultime 2 e le cancelliamo
+          gh run list --workflow "Laravel 12 Security & Quality CI" --limit 100 --json databaseId  --jq '.[2:].[] | .databaseId' | xargs -I{} gh run delete {}
+           # Otteniamo l'ID del workflow principale (cambia "Deploy Website" se necessario)
+          WORKFLOW_ID=$(gh run list --workflow "Deploy to Staging Sequential" --json workflowDatabaseId --limit 1 | jq '.[0].workflowDatabaseId')
+
+          # Troviamo tutte le run tranne le ultime 2 e le cancelliamo
+          gh run list --workflow "Deploy to Staging Sequential" --limit 100 --json databaseId  --jq '.[2:].[] | .databaseId' | xargs -I{} gh run delete {}
