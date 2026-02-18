@@ -34,7 +34,15 @@ jobs:
             git reset --hard origin/main
 
             # 3. Installazione dipendenze
-            composer install --no-dev --optimize-autoloader --no-interaction
+            composer install --no-dev --optimize-autoloader echo "🗑️ Rimozione file non necessari in Staging..."
+            rm -rf .github
+            rm -rf tests
+            rm -rf .editorconfig .gitattributes .styleci.yml README.md CHANGELOG.md
+
+            # Se NON usi node sul server (hai già la cartella public/build committata),
+            # de-commenta la riga sotto per risparmiare centinaia di MB:
+            rm -rf node_modules
+            # ---------------------------------------
 
             # 4. Comandi Laravel
             php artisan migrate --force
