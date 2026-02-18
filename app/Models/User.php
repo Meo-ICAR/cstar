@@ -8,18 +8,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;  // <--- Per Breezy
 use Jeffgreco13\FilamentBreezy\Traits\TwoFactorAuthenticatable;
-use Spatie\Activitylog\Traits\LogsActivity;  // <--- Per Filament Shield
+use Spatie\Activitylog\LogOptions;  // <--- Per Filament Shield
 // 1. IMPORTA QUESTE CLASSI
-use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+
     // <--- USA IL TRAIT
     use HasRoles;
     use LogsActivity;
+
     // Aggiungi questi Trait
     use TwoFactorAuthenticatable;
 
